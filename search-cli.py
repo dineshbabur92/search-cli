@@ -6,25 +6,35 @@ import os
 SEARCH_FOLDER = "./search_folder/" 
 
 class MyPrompt(Cmd):
+    # cli intro
     prompt = 'search-cli> '
-    intro = "Welcome to the search-cli. Enter 'help' to explore options."
- 
-    def do_index(self, inp):
+    intro = "Welcome to the search-cli. Enter 'help' to explore options. Enter 'help' <option> to view documentation"
+    
+    def do_index(self, inp: str):
+        """
+        for indexing the ./search_folder files
+        """
         if inp:
             print("Indexing does not require any parameters")
         print("Indexing files in ./search_folder...")
+        
+        # inverted_index similar to elastic search
         self.inverted_index = index_files()
 
     def help_index(self):
         print("Indexes documents in ./search_folder")
 
-    def do_search(self, search_txt):
+    def do_search(self, search_txt:str):
+        """
+        Searching txt in files
+        """
         if not search_txt:
             print("Please enter some search text")
             return
-        if not self.inverted_index:
+        if not hasattr(self,'inverted_index'):
             print("Please index the files first, before searching. Enter 'index'")
             return
+        
         search_files(search_txt, self.inverted_index)
         # return True
 
@@ -55,23 +65,30 @@ class MyPrompt(Cmd):
  
  
 def index_files():
-    
+    """
+    To create inverted index for files in ./search_folder
+    """
+
+    # list of files in SEARCH_FOLDER
     files = glob(f"{SEARCH_FOLDER}*")
     
-    # print(files)
+    # init
     inverted_index = defaultdict(lambda: defaultdict(lambda: 0))
     
     for file in files:
         
+        # reading by lines and spliting to words
         words = []
         with open(file, "r") as file_reader:
             words = file_reader.read().split()
         
+        # for each words, indexing files in which
+        #     it is present
         for word in words:
             inverted_index[word][os.path.basename(file)] += 1
         
-    for key in list(inverted_index.keys())[:3]:
-        print(inverted_index[key])
+    # for key in list(inverted_index.keys())[:3]:
+    #     print(inverted_index[key])
 
     return inverted_index
             
@@ -114,4 +131,5 @@ def search_files(search_txt: str, inverted_index: defaultdict(lambda: defaultdic
     print(files_ranked[:10])
 
 if __name__ == '__main__':
+    # runs an infinite cli
     MyPrompt().cmdloop()
